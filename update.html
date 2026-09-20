@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>อัปเดตข้อมูล - Health Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body style="background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; font-family: 'Kanit', sans-serif;">
+
+    <div style="background: #ffffff; width: 100%; max-width: 414px; border-radius: 32px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15); padding: 30px 24px; position: relative;">
+        
+        <!-- ปุ่มย้อนกลับ -->
+        <button onclick="window.location.href='dashboard.html'" style="position: absolute; top: 25px; left: 20px; background: none; border: none; font-size: 20px; cursor: pointer; color: #6B7280;">
+            🔙
+        </button>
+
+        <div style="text-align: center; margin-bottom: 25px; margin-top: 10px;">
+            <h1 style="font-size: 22px; color: #1F2937; font-weight: 600;">อัปเดตข้อมูลร่างกาย</h1>
+            <p style="font-size: 14px; color: #6B7280;">ติดตามความเปลี่ยนแปลงของคุณ</p>
+        </div>
+
+        <!-- แสดงค่าเดิม -->
+        <div style="background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 16px; padding: 15px; display: flex; justify-content: space-between; text-align: center; margin-bottom: 25px;">
+            <div>
+                <p style="font-size: 12px; color: #6B7280;">น้ำหนักเดิม</p>
+                <p style="font-size: 18px; font-weight: 600; color: #374151;"><span id="oldWeight">0</span> <span style="font-size: 12px;">กก.</span></p>
+            </div>
+            <div style="width: 1px; background: #E5E7EB;"></div>
+            <div>
+                <p style="font-size: 12px; color: #6B7280;">ส่วนสูงเดิม</p>
+                <p style="font-size: 18px; font-weight: 600; color: #374151;"><span id="oldHeight">0</span> <span style="font-size: 12px;">ซม.</span></p>
+            </div>
+        </div>
+
+        <!-- ฟอร์มกรอกข้อมูลใหม่ -->
+        <form id="updateForm" onsubmit="event.preventDefault(); updateData();" style="display: flex; flex-direction: column; gap: 15px;">
+            <div>
+                <label style="font-size: 14px; font-weight: 500; color: #374151; display: block; margin-bottom: 8px;">น้ำหนักใหม่ (กก.)</label>
+                <input type="number" id="newWeight" step="0.1" required style="width: 100%; padding: 14px 16px; border: 1.5px solid #E5E7EB; border-radius: 12px; font-size: 16px; outline: none;">
+            </div>
+            <div>
+                <label style="font-size: 14px; font-weight: 500; color: #374151; display: block; margin-bottom: 8px;">ส่วนสูงใหม่ (ซม.) <span style="font-size: 12px; color: #9CA3AF;">(ถ้าไม่เปลี่ยนให้ใส่ค่าเดิม)</span></label>
+                <input type="number" id="newHeight" required style="width: 100%; padding: 14px 16px; border: 1.5px solid #E5E7EB; border-radius: 12px; font-size: 16px; outline: none;">
+            </div>
+
+            <button type="submit" style="margin-top: 10px; background: #10B981; color: white; border: none; padding: 16px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);">
+                บันทึกและคำนวณใหม่ ➔
+            </button>
+        </form>
+
+        <!-- ปุ่มแก้ไขข้อมูลทั้งหมด -->
+        <div style="text-align: center; margin-top: 25px;">
+            <a href="input.html" style="color: #6B7280; text-decoration: none; font-size: 14px; display: inline-flex; align-items: center; gap: 5px;">
+                <span>⚙️</span> แก้ไขข้อมูลทั้งหมด (เพศ, อายุ, เป้าหมาย)
+            </a>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            const oldWeight = localStorage.getItem('currentWeight');
+            const oldHeight = localStorage.getItem('savedHeight');
+
+            if (!oldWeight || !localStorage.getItem('savedAge')) {
+                alert("กรุณากรอกข้อมูลพื้นฐานก่อนทำการอัปเดต");
+                window.location.href = 'input.html';
+                return;
+            }
+
+            document.getElementById('oldWeight').innerText = oldWeight;
+            document.getElementById('oldHeight').innerText = oldHeight;
+            
+            document.getElementById('newWeight').value = oldWeight;
+            document.getElementById('newHeight').value = oldHeight;
+        };
+
+        function formatDateShort(isoString) {
+            const parts = isoString.split('-');
+            if (parts.length === 3) {
+                const thaiMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+                const day = parseInt(parts[2], 10);
+                const month = thaiMonths[parseInt(parts[1], 10) - 1];
+                return `${day} ${month}`;
+            }
+            return isoString;
+        }
+
+        function updateData() {
+            const newWeight = parseFloat(document.getElementById('newWeight').value);
+            const newHeight = parseFloat(document.getElementById('newHeight').value);
+
+            const age = parseFloat(localStorage.getItem('savedAge'));
+            const gender = localStorage.getItem('savedGender');
+            const activityLevel = parseFloat(localStorage.getItem('savedActivity'));
+            const targetWeight = parseFloat(localStorage.getItem('targetWeight'));
+
+            const heightM = newHeight / 100;
+            const currentBmi = newWeight / (heightM * heightM);
+
+            let bmr = (gender === 'male') 
+                ? (10 * newWeight) + (6.25 * newHeight) - (5 * age) + 5
+                : (10 * newWeight) + (6.25 * newHeight) - (5 * age) - 161;
+            
+            const tdee = bmr * activityLevel;
+            const weightDiff = newWeight - targetWeight;
+
+            // 1. อัปเดตข้อมูล Dashboard
+            localStorage.setItem('calcBmi', currentBmi.toFixed(1));
+            localStorage.setItem('calcBmr', Math.round(bmr).toLocaleString());
+            localStorage.setItem('calcTdee', Math.round(tdee).toLocaleString());
+            localStorage.setItem('currentWeight', newWeight.toFixed(1));
+            localStorage.setItem('savedHeight', newHeight.toString());
+            localStorage.setItem('weightDiff', weightDiff.toFixed(1));
+
+            // 2. ส่วนเพิ่มใหม่: อัปเดตประวัติส่งให้หน้ากราฟอย่างลับๆ (Sync History)
+            const d = new Date();
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            const todayIso = `${year}-${month}-${day}`;
+            const formattedLabel = formatDateShort(todayIso);
+
+            // ดึงประวัติกราฟเดิมมา (ถ้ามี)
+            let savedRecords = JSON.parse(localStorage.getItem('user_weight_records')) || [];
+            
+            // เช็คว่าวันนี้เคยอัปเดตไปแล้วหรือยัง?
+            const existingIdx = savedRecords.findIndex(item => item.fullDate === todayIso);
+            
+            if (existingIdx !== -1) {
+                // ถ้าวันนี้เคยบันทึกแล้ว ให้แก้ค่าน้ำหนักของวันนี้
+                savedRecords[existingIdx].weight = newWeight;
+            } else {
+                // ถ้าวันนี้ยังไม่เคยบันทึก ให้เพิ่มจุดใหม่เข้าไป
+                savedRecords.push({
+                    date: formattedLabel,
+                    fullDate: todayIso,
+                    weight: newWeight
+                });
+            }
+            
+            // เซฟกลับลงไปให้หน้า Graph เรียกใช้
+            localStorage.setItem('user_weight_records', JSON.stringify(savedRecords));
+
+            window.location.href = 'dashboard.html';
+        }
+    </script>
+</body>
+</html>

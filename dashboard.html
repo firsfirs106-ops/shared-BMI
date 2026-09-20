@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>หน้าหลัก - Health Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- ส่วน Header และ Profile -->
+        <header class="profile-header" style="align-items: center;">
+            <div class="profile-wrapper" style="gap: 5px;">
+                <!-- ปรับขนาดรูปสัตว์ให้ใหญ่ขึ้น และลบกรอบ/เงาวงกลมออก -->
+                <div id="dashAvatar" style="font-size: 55px; line-height: 1; margin-right: 10px;">👤</div>
+                <div class="profile-info">
+                    <p class="greeting" style="margin-bottom: 0;">สวัสดีตอนเช้า ☀️</p>
+                    <h1 id="dashName">คุณผู้ใช้งาน</h1>
+                </div>
+            </div>
+            <!-- ปุ่มออกจากระบบที่เพิ่มข้อความให้ชัดเจน -->
+            <button onclick="logout()" style="background: #FEE2E2; color: #EF4444; border: none; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: background 0.2s;">
+                <span>🚪</span> ออกจากระบบ
+            </button>
+        </header>
+
+        <div class="dashboard-grid">
+            <!-- ส่วนวงกลม BMI -->
+            <section class="bmi-section">
+                <div class="bmi-card">
+                    <div class="bmi-circle" id="dashBmiCircle">
+                        <span class="bmi-label">BMI ของคุณ</span>
+                        <h2 class="bmi-value" id="dashBmiValue">0.0</h2>
+                        <div class="bmi-badge" id="dashBmiBadge">รอผลคำนวณ</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ข้อมูลเชิงลึก BMR, TDEE -->
+            <section class="health-stats">
+                <div class="stat-card">
+                    <div class="stat-icon bmr-icon">🔥</div>
+                    <div class="stat-info">
+                        <h3>BMR</h3>
+                        <p><span id="dashBmr">0</span> <span>kcal</span></p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon tdee-icon">⚡</div>
+                    <div class="stat-info">
+                        <h3>TDEE</h3>
+                        <p><span id="dashTdee">0</span> <span>kcal</span></p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- เป้าหมาย -->
+        <section class="goal-section">
+            <div class="goal-card">
+                <div class="goal-text">
+                    <h3>เป้าหมายน้ำหนัก</h3>
+                    <p><span id="dashTargetWeight">0</span> กก. <span id="dashCurrentWeight">(ปัจจุบัน 0 กก.)</span></p>
+                </div>
+                <div class="goal-progress">
+                    <div class="progress-bar" id="dashProgressBar" style="width: 50%;"></div>
+                </div>
+                <p class="goal-hint" id="dashGoalHint">-</p>
+            </div>
+        </section>
+
+        <!-- ปุ่มอัปเดตข้อมูลสุขภาพ (เพิ่มเข้ามาใหม่ให้เด่นขึ้น) -->
+        <!-- แก้จาก window.location.href='input.html' เป็น 'update.html' -->
+    <button onclick="window.location.href='update.html'" style="width: 100%; background: #ffffff; border: 2px solid #E5E7EB; color: #4B5563; padding: 14px; border-radius: 16px; font-size: 16px; font-weight: 500; cursor: pointer; margin-bottom: 25px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: all 0.2s ease;">
+    <span>🔄</span> อัปเดตข้อมูลน้ำหนัก
+    </button>
+
+        <!-- เมนูฟีเจอร์ -->
+        <h3 class="menu-title">ฟีเจอร์สุขภาพของคุณ</h3>
+        <section class="features-menu">
+            <a href="graph.html" class="feature-btn">
+                <div class="feature-content">
+                    <div class="icon-box graph-bg">
+                        <span style="font-size: 24px;">📊</span>
+                    </div>
+                    <span class="feature-name">กราฟติดตามน้ำหนัก</span>
+                </div>
+            </a>
+            <a href="diet.html" class="feature-btn">
+                <div class="feature-content">
+                    <div class="icon-box diet-bg">
+                        <span style="font-size: 24px;">🥗</span>
+                    </div>
+                    <span class="feature-name">ตารางเมนูอาหาร</span>
+                </div>
+            </a>
+            <a href="exercise.html" class="feature-btn">
+                <div class="feature-content">
+                    <div class="icon-box exercise-bg">
+                        <span style="font-size: 24px;">💪</span>
+                    </div>
+                    <span class="feature-name">โปรแกรมออกกำลังกาย</span>
+                </div>
+            </a>
+        </section>
+
+    </div>
+
+    <!-- ลอจิกดึงข้อมูลมาแสดง -->
+    <script>
+        window.onload = function() {
+            const userName = localStorage.getItem('userName');
+            const userAvatar = localStorage.getItem('userAvatar');
+            const bmi = parseFloat(localStorage.getItem('calcBmi'));
+
+            if (!userName || !bmi) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            document.getElementById('dashName').innerText = userName;
+            if (userAvatar) document.getElementById('dashAvatar').innerText = userAvatar;
+
+            document.getElementById('dashBmiValue').innerText = bmi.toFixed(1);
+            document.getElementById('dashBmr').innerText = localStorage.getItem('calcBmr');
+            document.getElementById('dashTdee').innerText = localStorage.getItem('calcTdee');
+
+            const target = localStorage.getItem('targetWeight');
+            const current = localStorage.getItem('currentWeight');
+            const diff = parseFloat(localStorage.getItem('weightDiff'));
+            
+            document.getElementById('dashTargetWeight').innerText = target;
+            document.getElementById('dashCurrentWeight').innerText = `(ปัจจุบัน ${current} กก.)`;
+
+            // ลอจิกคำนวณหลอด Progress Bar แบบคร่าวๆ
+            let progressPercent = 50; 
+            if(diff > 0) {
+                // กรณีลดน้ำหนัก
+                progressPercent = 100 - ((diff / target) * 100);
+            } else if (diff < 0) {
+                // กรณีเพิ่มน้ำหนัก
+                progressPercent = (current / target) * 100;
+            } else {
+                progressPercent = 100;
+            }
+            // ป้องกันไม่ให้เปอร์เซ็นต์เกิน 100 หรือต่ำกว่า 0
+            progressPercent = Math.max(5, Math.min(100, progressPercent));
+            document.getElementById('dashProgressBar').style.width = `${progressPercent}%`;
+
+            if (diff > 0) {
+                document.getElementById('dashGoalHint').innerText = `ลดอีก ${diff.toFixed(1)} กก. เพื่อถึงเป้าหมาย 🎯`;
+            } else if (diff < 0) {
+                document.getElementById('dashGoalHint').innerText = `เพิ่มอีก ${Math.abs(diff).toFixed(1)} กก. เพื่อถึงเป้าหมาย 🎯`;
+            } else {
+                document.getElementById('dashGoalHint').innerText = `เยี่ยมมาก! คุณถึงเป้าหมายแล้ว 🎉`;
+                document.getElementById('dashProgressBar').style.backgroundColor = '#10B981'; // เปลี่ยนเป็นสีเขียวเมื่อสำเร็จ
+            }
+
+            const circle = document.getElementById('dashBmiCircle');
+            const badge = document.getElementById('dashBmiBadge');
+            circle.className = 'bmi-circle'; 
+
+            if (bmi < 17.0) {
+                circle.classList.add('danger-low');
+                badge.className = 'bmi-badge danger-low-bg';
+                badge.innerText = 'ผอมมาก / อันตราย';
+            } else if (bmi < 18.5) {
+                circle.classList.add('warning-low');
+                badge.className = 'bmi-badge warning-low-bg';
+                badge.innerText = 'ผอม / น้ำหนักน้อย';
+            } else if (bmi <= 22.9) {
+                circle.classList.add('normal');
+                badge.className = 'bmi-badge normal-bg';
+                badge.innerText = 'ปกติ / สุขภาพดี';
+            } else if (bmi <= 24.9) {
+                circle.classList.add('warning-high');
+                badge.className = 'bmi-badge warning-high-bg';
+                badge.innerText = 'ท้วม / น้ำหนักเกิน';
+            } else {
+                circle.classList.add('danger-high');
+                badge.className = 'bmi-badge danger-high-bg';
+                badge.innerText = 'อ้วน / อันตราย';
+            }
+        };
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

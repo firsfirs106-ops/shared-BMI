@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ตารางอาหารตามเป้าหมาย - Health App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Prompt', 'sans-serif'] },
+                    colors: { brand: { 50: '#f0fdfa', 100: '#ccfbf1', 500: '#14b8a6', 600: '#0d9488', 900: '#134e4a' } }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #f8fafc; }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .glass-card {
+            background: #ffffff;
+            border: 1px solid #f1f5f9;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04);
+        }
+        .goal-tabs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            background: #f1f5f9;
+            padding: 5px;
+            border-radius: 14px;
+            gap: 6px;
+        }
+        .goal-btn {
+            border: none;
+            background: transparent;
+            padding: 10px 8px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+        .goal-btn.active {
+            background: #ffffff;
+            color: #0d9488;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen flex justify-center p-4 sm:p-8">
+
+    <main class="w-full max-w-3xl flex flex-col gap-5 fade-in">
+        
+        <!-- Header -->
+        <header class="glass-card p-4 sm:p-6 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-500 to-teal-400 flex items-center justify-center text-white shadow-lg shadow-brand-500/20">
+                    <i data-lucide="utensils" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-slate-900">ตารางอาหารและโภชนาการ</h1>
+                    <p class="text-xs text-slate-500">จัดสรรแคลอรี่และสารอาหารตามเป้าหมายของคุณ</p>
+                </div>
+            </div>
+            <a href="dashboard.html" class="px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors flex items-center gap-2">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i> กลับหน้าหลัก
+            </a>
+        </header>
+
+        <!-- เป้าหมายและการคำนวณ -->
+        <section class="glass-card p-5 sm:p-6">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
+                <!-- TDEE & Goal Tabs -->
+                <div class="sm:col-span-2 space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase mb-2">เป้าหมายทางโภชนาการ</label>
+                        <div class="goal-tabs">
+                            <button type="button" class="goal-btn" id="btn-cut" onclick="setGoal('cut', this)">ลดไขมัน</button>
+                            <button type="button" class="goal-btn active" id="btn-maintain" onclick="setGoal('maintain', this)">รักษารูปร่าง</button>
+                            <button type="button" class="goal-btn" id="btn-bulk" onclick="setGoal('bulk', this)">เพิ่มกล้าม</button>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 bg-slate-50 border border-slate-100 p-3 rounded-xl">
+                        <i data-lucide="flame" class="text-brand-500 w-5 h-5"></i>
+                        <div class="flex-1">
+                            <p class="text-xs text-slate-500 font-medium">TDEE อัตราเผาผลาญรวม</p>
+                            <p class="text-sm font-bold text-slate-800"><span id="baseTdee">2000</span> kcal/วัน</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Target Calorie -->
+                <div class="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-5 text-white flex flex-col justify-center items-center relative overflow-hidden shadow-lg shadow-slate-900/20">
+                    <div class="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
+                    <p class="text-xs font-medium text-slate-300 mb-1 z-10">แคลอรี่ที่แนะนำต่อวัน</p>
+                    <div class="flex items-baseline gap-1 z-10">
+                        <span id="targetCal" class="text-4xl font-extrabold text-brand-400">2,000</span>
+                        <span class="text-sm text-slate-400">kcal</span>
+                    </div>
+                    <p id="dietAdvice" class="text-[11px] text-slate-400 mt-2 text-center bg-white/10 px-3 py-1 rounded-full z-10">ทานเท่ากับที่เผาผลาญ</p>
+                </div>
+            </div>
+
+            <!-- สารอาหาร & น้ำ -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="bg-sky-50 border border-sky-100 p-3 rounded-xl flex items-center gap-3">
+                    <div class="p-2 bg-white rounded-lg text-sky-500"><i data-lucide="beef" class="w-5 h-5"></i></div>
+                    <div>
+                        <p class="text-[10px] font-bold text-sky-600 uppercase">โปรตีน (25%)</p>
+                        <p class="text-sm font-bold text-slate-800"><span id="macroP">125</span>g</p>
+                    </div>
+                </div>
+                <div class="bg-amber-50 border border-amber-100 p-3 rounded-xl flex items-center gap-3">
+                    <div class="p-2 bg-white rounded-lg text-amber-500"><i data-lucide="wheat" class="w-5 h-5"></i></div>
+                    <div>
+                        <p class="text-[10px] font-bold text-amber-600 uppercase">คาร์บ (50%)</p>
+                        <p class="text-sm font-bold text-slate-800"><span id="macroC">250</span>g</p>
+                    </div>
+                </div>
+                <div class="bg-rose-50 border border-rose-100 p-3 rounded-xl flex items-center gap-3">
+                    <div class="p-2 bg-white rounded-lg text-rose-500"><i data-lucide="droplet" class="w-5 h-5"></i></div>
+                    <div>
+                        <p class="text-[10px] font-bold text-rose-600 uppercase">ไขมันดี (25%)</p>
+                        <p class="text-sm font-bold text-slate-800"><span id="macroF">55</span>g</p>
+                    </div>
+                </div>
+                <div class="bg-blue-50 border border-blue-100 p-3 rounded-xl flex items-center gap-3">
+                    <div class="p-2 bg-white rounded-lg text-blue-500"><i data-lucide="glass-water" class="w-5 h-5"></i></div>
+                    <div>
+                        <p class="text-[10px] font-bold text-blue-600 uppercase">น้ำดื่มขั้นต่ำ</p>
+                        <p class="text-sm font-bold text-slate-800"><span id="waterIntake">2.0</span> ลิตร</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ตารางเมนูอาหาร -->
+        <section class="glass-card p-5 sm:p-6">
+            <div class="flex items-center justify-between mb-5">
+                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <i data-lucide="clipboard-list" class="text-brand-500 w-5 h-5"></i> ไอเดียเมนูอาหารใน 1 วัน
+                </h2>
+                <span id="themeBadge" class="text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 text-slate-600">เมนูสมดุล</span>
+            </div>
+
+            <div id="mealsContainer" class="space-y-4">
+                <!-- ข้อมูลเมนูจะถูกแทรกผ่าน JS -->
+            </div>
+        </section>
+        
+    </main>
+
+    <script>
+        lucide.createIcons();
+
+        // ฐานข้อมูลเมนูอาหารแยกตามเป้าหมาย
+       // ฐานข้อมูลเมนูอาหารแยกตามเป้าหมาย (ฉบับสตรีทฟู้ดและอาหารไทย)
+        const dietDatabase = {
+            cut: {
+                offset: -450,
+                advice: "เน้นต้ม นึ่ง ย่าง สั่งแม่ค้าว่า 'น้ำมันน้อย/ไม่ชูรส'",
+                themeText: "เมนูลดไขมัน (อาหารไทยแคลต่ำ)",
+                meals: [
+                    { id: 'breakfast', icon: 'coffee', name: 'มื้อเช้า', menu: 'ต้มเลือดหมู (ไม่ใส่เครื่องใน) + ข้าวเปล่าครึ่งถ้วย หรือ โจ๊กหมูสับล้วน', note: 'ถ้าเร่งด่วน กดไข่ต้ม 2 ฟองจากตู้ 7-Eleven กินคู่กับกาแฟดำได้เลย' },
+                    { id: 'lunch', icon: 'sun', name: 'มื้อเที่ยง', menu: 'ข้าวกะเพราไก่ชิ้น (สั่งน้ำมันน้อย ไม่ดาว) หรือ เกาเหลาน้ำใส', note: 'เมนูตามสั่งยอดฮิต คุมแคลได้ง่ายๆ แค่บอกแม่ค้าลดน้ำมัน' },
+                    { id: 'snack', icon: 'apple', name: 'ของว่าง', menu: 'ฝรั่ง หรือ แก้วมังกร 1 ถุง (จากรถเข็นผลไม้)', note: 'น้ำตาลน้อย อิ่มท้อง ช่วยลดความอยากของหวาน' },
+                    { id: 'dinner', icon: 'moon', name: 'มื้อเย็น', menu: 'สุกี้น้ำไก่/ทะเล (น้ำจิ้มน้อย) หรือ ยำวุ้นเส้นหมูสับล้วน', note: 'เน้นผักและโปรตีน ย่อยง่ายสบายท้องก่อนเข้านอน' }
+                ]
+            },
+            maintain: {
+                offset: 0,
+                advice: "ทานเมนูทั่วไปได้ แค่ระวังของทอดและน้ำหวาน",
+                themeText: "เมนูสุขภาพ (อาหารไทยทั่วไป)",
+                meals: [
+                    { id: 'breakfast', icon: 'coffee', name: 'มื้อเช้า', menu: 'ข้าวเหนียวหมูปิ้ง 3 ไม้ (เลือกร้านที่ไม่มันมาก) หรือ ขนมจีบซาลาเปา', note: 'หาซื้อง่ายหน้าปากซอย ให้พลังงานพร้อมลุยงาน' },
+                    { id: 'lunch', icon: 'sun', name: 'มื้อเที่ยง', menu: 'ข้าวมันไก่ต้ม (สั่งไม่เอาหนัง) หรือ ข้าวหมูแดง (บอกราดน้ำน้อยๆ)', note: 'สั่งร้านตามสั่งเจ้าประจำอย่างครัวชลธิชา หรือก๋วยเตี๋ยวแถวบ้านได้เลย' },
+                    { id: 'snack', icon: 'apple', name: 'ของว่าง', menu: 'ชาไทย/ชาเขียว (สั่งหวาน 25%) หรือ นมถั่วเหลือง/นมเปรี้ยว', note: 'เติมความสดชื่นยามบ่ายแบบน้ำตาลไม่พุ่ง' },
+                    { id: 'dinner', icon: 'moon', name: 'มื้อเย็น', menu: 'ข้าว 1 ทัพพี + ต้มยำกุ้งน้ำใส + ไข่เจียว (กินแชร์กับเพื่อน/ครอบครัว)', note: 'ทานเป็นกับข้าว รักษาสมดุลโปรตีนและคาร์บ' }
+                ]
+            },
+            bulk: {
+                offset: 350,
+                advice: "เน้นเนื้อๆ ข้าวพูนๆ เพิ่มคาร์บเพื่อเป็นพลังงานยกเวท",
+                themeText: "เมนูเพิ่มกล้าม (อาหารไทยพลังงานสูง)",
+                meals: [
+                    { id: 'breakfast', icon: 'coffee', name: 'มื้อเช้า', menu: 'ข้าวไข่เจียวหมูสับ 2 ฟอง + นมโปรตีนสูง', note: 'กดนมโปรตีนจากตู้สะดวกซื้อมากินคู่กัน ได้โปรตีนแบบจุกๆ' },
+                    { id: 'lunch', icon: 'sun', name: 'มื้อเที่ยง', menu: 'ข้าวขาหมู (เนื้อล้วน+คากินิดหน่อย) หรือ ข้าวกะเพราหมูกรอบ+ไข่ดาว', note: 'รับคาร์บและไขมันเพื่อเป็นพลังงานสำรองในการสร้างกล้าม' },
+                    { id: 'snack', icon: 'apple', name: 'ของว่าง', menu: 'ลูกชิ้นปิ้ง/หมูปิ้ง 4-5 ไม้ + กล้วยหอม', note: 'เติมพลังให้กล้ามเนื้อก่อนไปออกกำลังกายหนักๆ' },
+                    { id: 'dinner', icon: 'moon', name: 'มื้อเย็น', menu: 'ข้าว 2 ทัพพี + คอหมูย่าง หรือ ชาบู-หมูกระทะ (เน้นเนื้อสัตว์)', note: 'สายเพิ่มกล้ามกินหมูกระทะได้สบายๆ แค่เน้นเนื้อ เลี่ยงซดน้ำซุป' }
+                ]
+            }
+        };
+
+        let currentGoal = 'maintain';
+        let userTdee = 2000;
+        let userWeight = 65;
+
+        // ดึงข้อมูลจาก LocalStorage
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedTdee = localStorage.getItem('calcTdee');
+            const savedWeight = localStorage.getItem('currentWeight');
+            
+            if (savedTdee) userTdee = parseFloat(savedTdee.replace(/,/g, ''));
+            if (savedWeight) userWeight = parseFloat(savedWeight);
+
+            // ดึงเป้าหมายจากความต่างของน้ำหนัก
+            const diffStr = localStorage.getItem('weightDiff');
+            let targetBtn = document.getElementById('btn-maintain');
+            
+            if (diffStr) {
+                const diff = parseFloat(diffStr);
+                if (diff > 0) { // น้ำหนักจริง > เป้าหมาย = ลดไขมัน
+                    currentGoal = 'cut';
+                    targetBtn = document.getElementById('btn-cut');
+                } else if (diff < 0) { // น้ำหนักจริง < เป้าหมาย = เพิ่มกล้าม
+                    currentGoal = 'bulk';
+                    targetBtn = document.getElementById('btn-bulk');
+                }
+            }
+
+            document.querySelectorAll('.goal-btn').forEach(btn => btn.classList.remove('active'));
+            targetBtn.classList.add('active');
+
+            updateUI();
+        });
+
+        // ฟังก์ชันเปลี่ยนเป้าหมายเมื่อผู้ใช้กดแท็บ
+        function setGoal(goalKey, btnElement) {
+            currentGoal = goalKey;
+            document.querySelectorAll('.goal-btn').forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+            updateUI();
+        }
+
+        // อัปเดตข้อมูลทั้งหมดบนหน้าจอ
+        function updateUI() {
+            const data = dietDatabase[currentGoal];
+            const targetCal = Math.max(1200, Math.round(userTdee + data.offset));
+
+            // แสดงค่า Header
+            document.getElementById('baseTdee').innerText = Math.round(userTdee).toLocaleString();
+            document.getElementById('targetCal').innerText = targetCal.toLocaleString();
+            document.getElementById('dietAdvice').innerText = data.advice;
+            document.getElementById('themeBadge').innerText = data.themeText;
+
+            // คำนวณ Macros (โปรตีน 25%, คาร์บ 50%, ไขมัน 25%)
+            const p = Math.round((targetCal * 0.25) / 4);
+            const c = Math.round((targetCal * 0.50) / 4);
+            const f = Math.round((targetCal * 0.25) / 9);
+            
+            document.getElementById('macroP').innerText = p;
+            document.getElementById('macroC').innerText = c;
+            document.getElementById('macroF').innerText = f;
+
+            // คำนวณปริมาณน้ำ (น้ำหนักตัว x 33ml)
+            const waterLiters = (userWeight * 33) / 1000;
+            document.getElementById('waterIntake').innerText = waterLiters.toFixed(1);
+
+            // แสดงรายการอาหาร
+            const container = document.getElementById('mealsContainer');
+            container.innerHTML = data.meals.map((meal, index) => {
+                // คำนวณแคลอรี่คร่าวๆ แยกตามมื้อ (เช้า 30%, เที่ยง 35%, ว่าง 10%, เย็น 25%)
+                let mealCalRatio = 0;
+                if(meal.id === 'breakfast') mealCalRatio = 0.30;
+                else if(meal.id === 'lunch') mealCalRatio = 0.35;
+                else if(meal.id === 'snack') mealCalRatio = 0.10;
+                else if(meal.id === 'dinner') mealCalRatio = 0.25;
+                const mealCals = Math.round(targetCal * mealCalRatio);
+
+                return `
+                <div class="border border-slate-100 rounded-2xl p-4 flex gap-4 hover:border-brand-200 transition-colors bg-white">
+                    <div class="w-12 h-12 bg-slate-50 text-slate-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="${meal.icon}" class="w-6 h-6"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start mb-1">
+                            <h3 class="font-bold text-slate-800 text-sm">${meal.name}</h3>
+                            <span class="text-[11px] font-bold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-md">~${mealCals} kcal</span>
+                        </div>
+                        <p class="text-[13px] font-medium text-slate-700 mb-1">${meal.menu}</p>
+                        <p class="text-[11px] text-slate-400">💡 ${meal.note}</p>
+                    </div>
+                </div>`;
+            }).join('');
+
+            lucide.createIcons();
+        }
+    </script>
+</body>
+</html>

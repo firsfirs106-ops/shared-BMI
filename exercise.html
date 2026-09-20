@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>โปรแกรมออกกำลังกายตามค่า TDEE</title>
+  <!-- Google Fonts Prompt -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Prompt', -apple-system, BlinkMacSystemFont, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #f8fafc;
+      color: #1e293b;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 30px 16px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .card {
+      background: #ffffff;
+      border: 1px solid #f1f5f9;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04);
+    }
+
+    .header-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .header-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(79, 70, 229, 0.25);
+    }
+
+    .btn-back {
+      padding: 8px 16px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      color: #475569;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .btn-back:hover {
+      background: #f1f5f9;
+      color: #1e293b;
+    }
+
+    .control-grid {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 16px;
+      align-items: center;
+    }
+
+    @media (max-width: 640px) {
+      .control-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .tdee-input-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .tdee-input-wrapper {
+      display: flex;
+      align-items: center;
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 4px 12px;
+    }
+
+    .tdee-input-wrapper input {
+      width: 100%;
+      border: none;
+      background: transparent;
+      font-size: 18px;
+      font-weight: 700;
+      color: #4f46e5;
+      outline: none;
+    }
+
+    .goal-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      background: #f1f5f9;
+      padding: 5px;
+      border-radius: 14px;
+      gap: 6px;
+    }
+
+    .goal-btn {
+      border: none;
+      background: transparent;
+      padding: 10px 8px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+
+    .goal-btn.active {
+      background: #ffffff;
+      color: #4f46e5;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    /* เปลี่ยนจาก 3 เป็น 4 คอลัมน์เพื่อรองรับ ไขมัน (Fat) */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+
+    @media (max-width: 640px) {
+      .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .metric-card {
+      background: #f8fafc;
+      border: 1px solid #edf2f7;
+      border-radius: 16px;
+      padding: 16px;
+      text-align: center;
+      transition: transform 0.15s ease;
+    }
+
+    .metric-title {
+      font-size: 12px;
+      color: #64748b;
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+
+    .metric-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    .metric-unit {
+      font-size: 11px;
+      color: #94a3b8;
+    }
+
+    .strategy-card {
+      padding: 18px 20px;
+      border-radius: 16px;
+      font-size: 13px;
+      line-height: 1.6;
+      border: 1px solid transparent;
+    }
+
+    .strategy-cut { background: #fff1f2; border-color: #ffe4e6; color: #9f1239; }
+    .strategy-maintain { background: #eef2ff; border-color: #e0e7ff; color: #3730a3; }
+    .strategy-bulk { background: #f0fdf4; border-color: #dcfce7; color: #166534; }
+
+    .workout-schedule {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .schedule-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      border-radius: 14px;
+      background: #f8fafc;
+      border: 1px solid #f1f5f9;
+      font-size: 13px;
+      transition: all 0.15s ease;
+    }
+
+    .schedule-row:hover {
+      background: #ffffff;
+      border-color: #e2e8f0;
+      transform: translateX(4px);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+    }
+
+    .day-badge {
+      font-weight: 700;
+      color: #334155;
+      width: 100px;
+      flex-shrink: 0;
+    }
+
+    .type-pill {
+      padding: 4px 12px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 11.5px;
+      flex-shrink: 0;
+    }
+
+    .type-cut { background: #ffe4e6; color: #e11d48; }
+    .type-maintain { background: #e0e7ff; color: #4338ca; }
+    .type-bulk { background: #dcfce7; color: #16a34a; }
+
+    .schedule-desc {
+      color: #64748b;
+      font-size: 12.5px;
+      text-align: right;
+      flex: 1;
+      margin-left: 16px;
+    }
+
+    @media (max-width: 640px) {
+      .schedule-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+      .schedule-desc {
+        text-align: left;
+        margin-left: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <div class="card header-box">
+      <div class="header-title-wrap">
+        <div class="brand-icon">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+          </svg>
+        </div>
+        <div>
+          <h1 style="font-size: 18px; font-weight: 700; color: #0f172a;">โปรแกรมออกกำลังกาย</h1>
+          <p style="font-size: 12.5px; color: #64748b;">ออกแบบการฝึกและสารอาหารให้ตรงกับค่าเผาผลาญ (TDEE)</p>
+        </div>
+      </div>
+      <!-- ชี้กลับไปแดชบอร์ด -->
+      <a href="dashboard.html" class="btn-back">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+        </svg>
+        <span>กลับหน้าหลัก</span>
+      </a>
+    </div>
+
+    <div class="card">
+      <div class="control-grid">
+        <div class="tdee-input-group">
+          <label>ค่า TDEE ของคุณ</label>
+          <div class="tdee-input-wrapper">
+            <input type="number" id="tdeeInput" value="2000" min="1000" max="5000" step="50" oninput="updateAll()">
+            <span style="font-size: 12px; font-weight: 600; color: #94a3b8;">kcal</span>
+          </div>
+        </div>
+
+        <div>
+          <label style="display:block; font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 6px; text-transform: uppercase;">
+            เป้าหมายปัจจุบันของคุณ
+          </label>
+          <div class="goal-tabs">
+            <button type="button" class="goal-btn" id="btn-cut" onclick="setGoal('cut', this)">ลดไขมัน</button>
+            <button type="button" class="goal-btn active" id="btn-maintain" onclick="setGoal('maintain', this)">รักษารูปร่าง</button>
+            <button type="button" class="goal-btn" id="btn-bulk" onclick="setGoal('bulk', this)">เพิ่มกล้าม</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- แผงคำนวณแคลอรี่เป้าหมาย & สารอาหารครบ 3 หมู่ -->
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-title">แคลอรี่เป้าหมาย</div>
+        <div class="metric-value" id="targetCalDisplay" style="color: #4f46e5;">2,000</div>
+        <div class="metric-unit">kcal / วัน</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">โปรตีน (Protein)</div>
+        <div class="metric-value" id="proteinDisplay" style="color: #0284c7;">125</div>
+        <div class="metric-unit">กรัม (~25%)</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">คาร์บ (Carbs)</div>
+        <div class="metric-value" id="carbsDisplay" style="color: #d97706;">250</div>
+        <div class="metric-unit">กรัม (~50%)</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">ไขมัน (Fat)</div>
+        <div class="metric-value" id="fatDisplay" style="color: #059669;">55</div>
+        <div class="metric-unit">กรัม (~25%)</div>
+      </div>
+    </div>
+
+    <div id="strategyBox" class="strategy-card strategy-maintain">
+      <!-- ข้อความคำแนะนำจะเปลี่ยนตามเป้าหมาย -->
+    </div>
+
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h2 style="font-size: 15px; font-weight: 700; color: #1e293b;">
+          ตารางการฝึกซ้อมรายสัปดาห์ (Weekly Routine)
+        </h2>
+        <span style="font-size: 11px; font-weight: 600; color: #64748b; background: #f1f5f9; padding: 4px 10px; border-radius: 9999px;">
+          โปรแกรม 7 วัน
+        </span>
+      </div>
+
+      <div class="workout-schedule" id="scheduleContainer">
+        <!-- รายการตารางออกกำลังกายจะถูกสร้างจาก JavaScript -->
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const workoutDatabase = {
+      cut: {
+        calOffset: -450,
+        strategyClass: "strategy-card strategy-cut",
+        typeClass: "type-pill type-cut",
+        title: "เป้าหมาย: ลดไขมันและกระชับสัดส่วน (Calorie Deficit)",
+        desc: "ทานพลังงานน้อยกว่าค่า TDEE ประมาณ 400-500 kcal เน้นการฝึกเวทเทรนนิ่งเพื่อปกป้องมวลกล้ามเนื้อไม่ให้สลาย ผสมผสานกับการทำคาร์ดิโอเพื่อดึงไขมันมาใช้",
+        schedule: [
+          { day: "วันจันทร์", type: "Upper Body + Cardio", note: "เวทช่วงบน (อก/หลัง) 4 ท่า + เดินชัน/ปั่นจักรยาน 20 นาที" },
+          { day: "วันอังคาร", type: "Lower Body + Core", note: "Squats, Lunges, Deadlift + บริหารหน้าท้อง Plank 3 เซ็ต" },
+          { day: "วันพุธ", type: "Cardio Zone 2", note: "วิ่งเหยาะๆ หรือเดินเร็วต่อเนื่อง 40 นาที" },
+          { day: "วันพฤหัสบดี", type: "Upper Body Hypertrophy", note: "เน้นไหล่และแขน พักระหว่างเซ็ต 45-60 วินาที" },
+          { day: "วันศุกร์", type: "Full Body Circuit", note: "เวททั่วร่างแบบต่อเนื่อง กระตุ้นอัตราการเผาผลาญไขมัน" },
+          { day: "วันเสาร์", type: "Active Recovery", note: "เดินผ่อนคลาย 7,000-10,000 ก้าว หรือยืดเหยียดโยคะ" },
+          { day: "วันอาทิตย์", type: "Rest Day", note: "พักผ่อนเต็มที่ นอนหลับ 7-8 ชั่วโมงเพื่อการฟื้นฟู" }
+        ]
+      },
+      maintain: {
+        calOffset: 0,
+        strategyClass: "strategy-card strategy-maintain",
+        typeClass: "type-pill type-maintain",
+        title: "เป้าหมาย: รักษารูปร่างและเสริมสร้างสมรรถภาพ (Maintenance)",
+        desc: "ทานพลังงานให้สมดุลเท่ากับค่า TDEE เน้นเพิ่มความแข็งแรง (Strength) และความทนทานของกล้ามเนื้อ โดยที่น้ำหนักตัวรวมจะคงที่และเฟิร์มขึ้น",
+        schedule: [
+          { day: "วันจันทร์", type: "Chest & Triceps", note: "อกและหลังแขน เช่น Bench Press, Push-ups, Dips 3-4 เซ็ต" },
+          { day: "วันอังคาร", type: "Back & Biceps", note: "หลังและหน้าแขน เช่น Pull-ups, Dumbbell Row, Curls" },
+          { day: "วันพุธ", type: "Rest / Light Cardio", note: "พักผ่อน หรือจ็อกกิ้งเบาๆ 30 นาทีเพื่อสุขภาพหัวใจ" },
+          { day: "วันพฤหัสบดี", type: "Legs & Abs", note: "ต้นขา ก้น น่อง และกล้ามเนื้อแกนกลางลำตัว" },
+          { day: "วันศุกร์", type: "Shoulders & Arms", note: "หัวไหล่รอบทิศทาง (Overhead Press, Lateral Raises)" },
+          { day: "วันเสาร์", type: "Full Body Fitness", note: "บอดี้เวทผสมคาร์ดิโอ เสริมความคล่องตัว" },
+          { day: "วันอาทิตย์", type: "Rest Day", note: "พักฟื้นร่างกาย ชาร์จพลังงานสำหรับสัปดาห์ถัดไป" }
+        ]
+      },
+      bulk: {
+        calOffset: 350,
+        strategyClass: "strategy-card strategy-bulk",
+        typeClass: "type-pill type-bulk",
+        title: "เป้าหมาย: เพิ่มขนาดกล้ามเนื้อและน้ำหนักตัว (Calorie Surplus)",
+        desc: "ทานพลังงานส่วนเกินจากค่า TDEE 300-400 kcal เพื่อเป็นวัตถุดิบในการสร้างกล้ามเนื้อใหม่ เน้นฝึกเวทหนัก 6-10 ครั้ง/เซ็ต และเพิ่มน้ำหนักยกอย่างต่อเนื่อง",
+        schedule: [
+          { day: "วันจันทร์", type: "Push Day (อก/ไหล่/หลังแขน)", note: "เน้นท่าฝึกหลัก Dumbbell Press, Incline Press, Shoulder Press" },
+          { day: "วันอังคาร", type: "Pull Day (หลัง/หน้าแขน)", note: "เน้นความกว้างและความหนาของแผ่นหลัง Lat Pulldown, Row" },
+          { day: "วันพุธ", type: "Leg Day (เน้นขาหนัก)", note: "Squats หนักปานกลาง-สูง, Leg Press, Romanian Deadlift" },
+          { day: "วันพฤหัสบดี", type: "Rest & Nutrition", note: "งดเวท เน้นทานโปรตีนและคาร์บเชิงซ้อนให้ถึงเกณฑ์" },
+          { day: "วันศุกร์", type: "Upper Body Focus", note: "เก็บมัดกล้ามเนื้อช่วงบน อกบนและปีกหลังเพื่อความหนา" },
+          { day: "วันเสาร์", type: "Arms & Core Special", note: "เน้นแขนหน้า-หลังและกล้ามท้องแบบเจาะจง" },
+          { day: "วันอาทิตย์", type: "Complete Rest", note: "พักผ่อนเต็มวัน ให้กล้ามเนื้อซ่อมแซมและเติบโตเต็มที่" }
+        ]
+      }
+    };
+
+    let currentGoal = 'maintain';
+
+    window.addEventListener('DOMContentLoaded', () => {
+      // 1. ดึง TDEE ของผู้ใช้งานจาก LocalStorage
+      const savedTdeeStr = localStorage.getItem('calcTdee');
+      if (savedTdeeStr) {
+        // ลบลูกน้ำออกเผื่อมี (เช่น "2,500" -> 2500)
+        const rawTdee = parseFloat(savedTdeeStr.replace(/,/g, ''));
+        document.getElementById('tdeeInput').value = rawTdee;
+      }
+
+      // 2. ดึงเป้าหมายจากน้ำหนัก (วิเคราะห์ว่าผู้ใช้อยาก ลด/เพิ่ม/คงที่)
+      const diffStr = localStorage.getItem('weightDiff');
+      let targetBtn = document.getElementById('btn-maintain');
+      
+      if (diffStr) {
+          const diff = parseFloat(diffStr);
+          if (diff > 0) { // น้ำหนักปัจจุบัน > เป้าหมาย = ลดไขมัน
+              currentGoal = 'cut';
+              targetBtn = document.getElementById('btn-cut');
+          } else if (diff < 0) { // น้ำหนักปัจจุบัน < เป้าหมาย = เพิ่มกล้าม
+              currentGoal = 'bulk';
+              targetBtn = document.getElementById('btn-bulk');
+          }
+      }
+
+      // ตั้งค่าปุ่มเป้าหมายให้ตรงกับโปรไฟล์
+      document.querySelectorAll('.goal-btn').forEach(btn => btn.classList.remove('active'));
+      targetBtn.classList.add('active');
+
+      updateAll();
+    });
+
+    function setGoal(goalKey, btnElement) {
+      currentGoal = goalKey;
+      document.querySelectorAll('.goal-btn').forEach(btn => btn.classList.remove('active'));
+      btnElement.classList.add('active');
+      updateAll();
+    }
+
+    function updateAll() {
+      const baseTDEE = parseFloat(document.getElementById('tdeeInput').value) || 2000;
+      const data = workoutDatabase[currentGoal];
+
+      const targetCal = Math.max(1200, Math.round(baseTDEE + data.calOffset));
+
+      // คำนวณสารอาหารหลัก (โปรตีน 25%, คาร์บ 50%, ไขมัน 25%)
+      // โปรตีนและคาร์บ 1 กรัม = 4 kcal | ไขมัน 1 กรัม = 9 kcal
+      const proteinGrams = Math.round((targetCal * 0.25) / 4);
+      const carbsGrams = Math.round((targetCal * 0.50) / 4);
+      const fatGrams = Math.round((targetCal * 0.25) / 9);
+
+      document.getElementById('targetCalDisplay').textContent = targetCal.toLocaleString();
+      document.getElementById('proteinDisplay').textContent = proteinGrams;
+      document.getElementById('carbsDisplay').textContent = carbsGrams;
+      document.getElementById('fatDisplay').textContent = fatGrams;
+
+      const strategyBox = document.getElementById('strategyBox');
+      strategyBox.className = data.strategyClass;
+      strategyBox.innerHTML = `
+        <div style="font-weight: 700; font-size: 14px; margin-bottom: 4px;">${data.title}</div>
+        <div>${data.desc}</div>
+      `;
+
+      const scheduleContainer = document.getElementById('scheduleContainer');
+      scheduleContainer.innerHTML = data.schedule.map(item => `
+        <div class="schedule-row">
+          <span class="day-badge">${item.day}</span>
+          <span class="${data.typeClass}">${item.type}</span>
+          <span class="schedule-desc">${item.note}</span>
+        </div>
+      `).join('');
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health & Nutrition Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Prompt', 'sans-serif'] },
+                    colors: { medical: { 50: '#f0fdf4', 100: '#dcfce7', 500: '#22c55e', 600: '#16a34a', 700: '#15803d' } }
+                }
+            }
+        }
+    </script>
+    <style>
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+        .fade-in { animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen flex items-center justify-center p-4">
+
+    <main id="appMain" class="w-full max-w-lg bg-white rounded-3xl shadow-xl overflow-hidden fade-in hidden">
+        
+        <!-- Header แบบใหม่ มีปุ่มโปรไฟล์ -->
+        <div class="bg-gradient-to-r from-medical-500 to-teal-500 p-6 text-white text-center relative">
+            
+            <!-- แสดงโปรไฟล์ผู้ใช้งานมุมซ้ายบน -->
+            <div class="absolute top-4 left-4 flex items-center gap-2 bg-white/20 px-3 py-1.5 rounded-full backdrop-blur-sm">
+                <span id="displayAvatar" class="text-xl">👤</span>
+                <span id="displayName" class="text-sm font-medium">ชื่อผู้ใช้</span>
+            </div>
+
+            <!-- ปุ่มออกจากระบบมุมขวาบน -->
+            <button onclick="logout()" class="absolute top-4 right-4 text-xs font-medium bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-full backdrop-blur-sm transition-colors">
+                ออกระบบ
+            </button>
+
+            <h1 class="text-2xl font-semibold mt-8">ข้อมูลสุขภาพของคุณ</h1>
+            <p class="text-medical-50 text-sm mt-1">คำนวณ BMI, BMR และ TDEE เพื่อเป้าหมายของคุณ</p>
+        </div>
+
+        <!-- SECTION 1: DATA INPUT FORM -->
+        <section id="inputSection" class="p-6 sm:p-8">
+            <form id="healthForm" onsubmit="event.preventDefault(); calculateResults();">
+                <div id="errorMsg" class="hidden bg-red-100 text-red-600 text-sm p-3 rounded-lg mb-4 text-center">
+                    กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง
+                </div>
+
+                <div class="mb-5">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">เพศ</label>
+                    <div class="grid grid-cols-2 gap-4">
+                        <button type="button" id="btnMale" onclick="selectGender('male')" class="flex flex-col items-center justify-center py-3 border-2 border-medical-500 bg-medical-50 text-medical-700 rounded-xl transition-all">
+                            <span class="font-medium">ชาย</span>
+                        </button>
+                        <button type="button" id="btnFemale" onclick="selectGender('female')" class="flex flex-col items-center justify-center py-3 border-2 border-gray-200 text-gray-400 rounded-xl hover:border-medical-200 hover:text-medical-500 transition-all">
+                            <span class="font-medium">หญิง</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-5">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">อายุ (ปี)</label>
+                        <input type="number" id="age" min="1" max="120" placeholder="เช่น 25" required class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-xl focus:ring-medical-500 focus:border-medical-500 block p-3">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ส่วนสูง (ซม.)</label>
+                        <input type="number" id="height" min="50" max="250" placeholder="เช่น 170" required class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-xl focus:ring-medical-500 focus:border-medical-500 block p-3">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">น้ำหนัก (กก.)</label>
+                        <input type="number" id="weight" min="20" max="300" step="0.1" placeholder="เช่น 65" required class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-xl focus:ring-medical-500 focus:border-medical-500 block p-3">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">เป้าหมาย (กก.)</label>
+                        <input type="number" id="targetWeight" min="20" max="300" step="0.1" placeholder="เช่น 60" required class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-xl focus:ring-medical-500 focus:border-medical-500 block p-3">
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ระดับพฤติกรรม</label>
+                    <select id="activity" class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-xl focus:ring-medical-500 focus:border-medical-500 block p-3">
+                        <option value="1.2">นั่งทำงานเป็นหลัก (ไม่ออกกำลังกายเลย)</option>
+                        <option value="1.375">ออกกำลังกายเบาๆ (1-3 วัน/สัปดาห์)</option>
+                        <option value="1.55" selected>ออกกำลังกายปานกลาง (3-5 วัน/สัปดาห์)</option>
+                        <option value="1.725">ออกกำลังกายหนัก (6-7 วัน/สัปดาห์)</option>
+                        <option value="1.9">ใช้แรงงานหรือนักกีฬา (หนักมาก)</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="w-full text-white bg-medical-500 hover:bg-medical-600 focus:ring-4 focus:ring-medical-100 font-medium rounded-xl text-lg px-5 py-3.5 text-center transition-colors shadow-lg shadow-medical-500/30">
+                    คำนวณผลลัพธ์
+                </button>
+            </form>
+        </section>
+
+        <!-- SECTION 2: DASHBOARD -->
+        <section id="dashboardSection" class="hidden p-6 sm:p-8 bg-gray-50 flex-col h-full fade-in">
+            <h2 class="text-xl font-semibold text-gray-800 text-center mb-6">สรุปข้อมูลสุขภาพของคุณ</h2>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center col-span-2 sm:col-span-1">
+                    <span class="text-sm text-gray-500 mb-1">ค่าดัชนีมวลกาย (BMI)</span>
+                    <span id="resBmi" class="text-3xl font-bold text-gray-800">0.0</span>
+                    <span id="resBmiCategory" class="px-3 py-1 mt-2 text-xs font-medium rounded-full bg-blue-100 text-blue-700">ปกติ</span>
+                </div>
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center col-span-2 sm:col-span-1">
+                    <span class="text-sm text-gray-500 mb-1">เป้าหมายของคุณ</span>
+                    <span id="resGoalText" class="text-lg font-semibold text-gray-800 mt-1">รักษาน้ำหนัก</span>
+                    <span id="resGoalDiff" class="text-sm text-gray-500 mt-1">-</span>
+                </div>
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center">
+                    <span class="text-sm text-gray-500 mb-1">BMR</span>
+                    <span id="resBmr" class="text-2xl font-bold text-medical-600">0</span>
+                    <span class="text-xs text-gray-400 mt-1">kcal / วัน</span>
+                </div>
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center">
+                    <span class="text-sm text-gray-500 mb-1">TDEE</span>
+                    <span id="resTdee" class="text-2xl font-bold text-teal-600">0</span>
+                    <span class="text-xs text-gray-400 mt-1">kcal / วัน</span>
+                </div>
+            </div>
+
+            <div id="warningBox" class="hidden bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm p-4 rounded-xl mb-6">
+                <span id="warningText">ข้อควรระวัง</span>
+            </div>
+
+            <button onclick="showForm()" class="w-full text-gray-600 bg-white border-2 border-gray-200 hover:bg-gray-50 font-medium rounded-xl text-lg px-5 py-3 text-center transition-colors">
+                คำนวณใหม่
+            </button>
+        </section>
+    </main>
+
+    <script>
+        // ระบบตรวจสอบการล็อกอิน
+        window.onload = function() {
+            const userName = localStorage.getItem('userName');
+            const userAvatar = localStorage.getItem('userAvatar');
+
+            // ถ้าไม่มีชื่อ (แอบเข้าหน้านี้ตรงๆ) ให้เด้งกลับไปหน้าแรก
+            if (!userName) {
+                window.location.href = 'index.html';
+                return; 
+            }
+
+            // ถ้าผ่าน ให้เอาชื่อมาแสดงและโชว์หน้าเว็บ
+            document.getElementById('displayName').innerText = userName;
+            if (userAvatar) document.getElementById('displayAvatar').innerText = userAvatar;
+            document.getElementById('appMain').classList.remove('hidden');
+        };
+
+        // ระบบออกจากระบบ
+        function logout() {
+            localStorage.removeItem('userName');
+            localStorage.removeItem('userAvatar');
+            window.location.href = 'index.html';
+        }
+
+        // ระบบคำนวณของเดิม
+        let currentGender = 'male';
+        const btnMale = document.getElementById('btnMale');
+        const btnFemale = document.getElementById('btnFemale');
+        const errorMsg = document.getElementById('errorMsg');
+        const inputSection = document.getElementById('inputSection');
+        const dashboardSection = document.getElementById('dashboardSection');
+
+        function selectGender(gender) {
+            currentGender = gender;
+            if (gender === 'male') {
+                btnMale.className = "flex flex-col items-center justify-center py-3 border-2 border-medical-500 bg-medical-50 text-medical-700 rounded-xl transition-all";
+                btnFemale.className = "flex flex-col items-center justify-center py-3 border-2 border-gray-200 text-gray-400 rounded-xl hover:border-medical-200 transition-all";
+            } else {
+                btnFemale.className = "flex flex-col items-center justify-center py-3 border-2 border-pink-500 bg-pink-50 text-pink-700 rounded-xl transition-all";
+                btnMale.className = "flex flex-col items-center justify-center py-3 border-2 border-gray-200 text-gray-400 rounded-xl hover:border-medical-200 transition-all";
+            }
+        }
+
+        function calculateResults() {
+            const age = parseFloat(document.getElementById('age').value);
+            const heightCm = parseFloat(document.getElementById('height').value);
+            const currentWeight = parseFloat(document.getElementById('weight').value);
+            const targetWeight = parseFloat(document.getElementById('targetWeight').value);
+            const activityLevel = parseFloat(document.getElementById('activity').value);
+
+            if (!age || !heightCm || !currentWeight || !targetWeight || age <= 0) {
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+            errorMsg.classList.add('hidden');
+
+            const heightM = heightCm / 100;
+            const currentBmi = currentWeight / (heightM * heightM);
+            
+            let bmr = (currentGender === 'male') 
+                ? (10 * currentWeight) + (6.25 * heightCm) - (5 * age) + 5
+                : (10 * currentWeight) + (6.25 * heightCm) - (5 * age) - 161;
+            const tdee = bmr * activityLevel;
+            const weightDiff = currentWeight - targetWeight;
+
+            // บันทึกตัวเลขทั้งหมดลง localStorage
+            localStorage.setItem('calcBmi', currentBmi.toFixed(1));
+            localStorage.setItem('calcBmr', Math.round(bmr).toLocaleString());
+            localStorage.setItem('calcTdee', Math.round(tdee).toLocaleString());
+            localStorage.setItem('currentWeight', currentWeight.toFixed(1));
+            localStorage.setItem('targetWeight', targetWeight.toFixed(1));
+            localStorage.setItem('weightDiff', weightDiff.toFixed(1));
+            // เพิ่มการเซฟข้อมูลพื้นฐาน (เอาไปแทรกไว้รวมกับกลุ่ม localStorage.setItem เดิม)
+            localStorage.setItem('savedAge', age.toString());
+            localStorage.setItem('savedGender', currentGender);
+            localStorage.setItem('savedActivity', activityLevel.toString());
+            localStorage.setItem('savedHeight', heightCm.toString());
+
+            // เด้งไปหน้า dashboard ที่สวยงามของเรา
+            window.location.href = 'dashboard.html';
+        }
+
+        function showForm() {
+            dashboardSection.classList.add('hidden');
+            inputSection.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
